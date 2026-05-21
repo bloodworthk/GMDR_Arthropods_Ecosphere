@@ -91,13 +91,6 @@ Weight_Data_22<-read.csv("2022_Sweep_Net_D-Vac_Weight_Data_FK.csv",header=T) %>%
   mutate(Collection_Method=ifelse(Collection_Method=="d-vac","dvac",ifelse(Collection_Method=="sweep_net","sweep",Collection_Method)))%>% 
   filter(Collection_Method=="dvac")
 
-###### Arthropod Feeding Guild Data ####
-#Feeding<-read.csv("Arthropod_ID_Data_Guilds.csv", header=T)
-
-###### ??? USING? Plant Species Comp Data ####
-#PlantComp<-read.csv("Plant_Species_Comp_2022.csv",header=T) 
-#Functional_Groups<-read.csv("FunctionalGroups.csv")
-
 #### Formatting and Cleaning ####
 
 ###### ID Data ####
@@ -228,39 +221,6 @@ Abundance<-ID_Data_Official %>%
   summarise(Abundance=length(Sample_Number)) %>% 
   ungroup() 
 
-# Abundance_Order<-Abundance %>% 
-#   dplyr::select(Year,Block,Grazing_Treatment,Correct_Order,Plot,Abundance) %>% 
-#   unique() %>% 
-#   group_by(Year,Block,Grazing_Treatment, Correct_Order) %>% 
-#   summarise(GrTrt_Abundance=mean(Abundance)) %>% 
-#   ungroup()
-  
-
-# ###### All Arthropods in a Plot ####
-# Abundance_Plot<-ID_Data_Official %>% 
-#   group_by(Collection_Method,Year,Block,Grazing_Treatment,Plot) %>% 
-#   summarise(Plot_Abundance=length(Sample_Number)) %>% 
-#   ungroup() %>% 
-#   group_by(Year,Block,Grazing_Treatment) %>% 
-#   summarise(GrTrt_Abundance=mean(Plot_Abundance)) %>% 
-#   ungroup()
-
-###### Family in a Plot ####
-# Abundance_Family_Guild<-ID_Data_Official %>% 
-#   group_by(Collection_Method,Year,Block,Grazing_Treatment,Plot,Correct_Order) %>% 
-#   mutate(Abundance=length(Sample_Number)) %>% 
-#   ungroup() %>% 
-#   left_join(Feeding) %>% 
-#   dplyr::select(Collection_Method,Year,Block,Plot, Grazing_Treatment,Correct_Order,Correct_Family,Guild,Abundance) %>% 
-#   unique() %>% 
-#   group_by(Year,Block,Grazing_Treatment,Correct_Order,Correct_Family,Guild) %>% 
-#   summarise(Avg_Plot_Abundance=mean(Abundance)) %>% 
-#   ungroup()
-
-# Abundance_Family<-Abundance %>% 
-#   dplyr::select(Year,Block,Grazing_Treatment,Correct_Order, Avg_Abundance) %>% 
-#   unique() 
-
 ###### Absolute Weight ####
 #Summing all weights by order within dataset, grazing treatment, block, and plot so that we can look at differences in order across plots
 Weight_Data_Summed<-aggregate(Dry_Weight_g~Coll_Year_Bl_Trt+Plot+Correct_Order, data=Weight_Data_Official, FUN=sum, na.rm=FALSE) 
@@ -288,31 +248,6 @@ Weight_by_Grazing_dvac<-Weight_Data_Summed_dvac %>%
   summarise(Average_Weight=mean(GrTrt_Weight),Weight_SD=sd(GrTrt_Weight),Weight_n=length(GrTrt_Weight)) %>% 
   mutate(Weight_St_Error=Weight_SD/sqrt(Weight_n)) %>% 
   ungroup()
-
-# ###### Absolute Count ####
-# Abundance_Count<-Abundance_Order %>% 
-#   group_by(Year,Grazing_Treatment,Correct_Order) %>% 
-#   summarise(Average_Count=mean(GrTrt_Abundance),Count_SD=sd(GrTrt_Abundance),Count_n=length(GrTrt_Abundance)) %>% 
-#   mutate(Count_St_Error=Count_SD/sqrt(Count_n)) %>% 
-#   ungroup() %>% 
-#   mutate(Grazing_Treatment=ifelse(Grazing_Treatment=="HG","High Impact Grazing",ifelse(Grazing_Treatment=="LG","Light Grazing",ifelse(Grazing_Treatment=="NG","Rest from Grazing",Grazing_Treatment))))
-
-# ### Plot Level Abundance by Order by Grazing Treatment ###
-# Weight_by_Order_Dvac<-Weight_Data_Summed %>%  
-#   filter(Correct_Order!="Unknown_1") %>% 
-#   filter(Correct_Order!="Unknown") %>% 
-#   filter(Correct_Order!="unknown") %>% 
-#   filter(Correct_Order!="Snail") %>% 
-#   filter(Correct_Order!="Body_Parts") %>% 
-#   filter(Correct_Order!="Body Parts") %>% 
-#   filter(Plot!="NA") %>% 
-#   spread(key=Correct_Order,value=Dry_Weight_g, fill=0) %>% 
-#   gather(key="Correct_Order","Dry_Weight_g",6:15) %>% 
-#   group_by(Collection_Method,Year, Grazing_Treatment, Correct_Order) %>% 
-#   summarise(Average_Weight=mean(Dry_Weight_g),Weight_SD=sd(Dry_Weight_g),Weight_n=length(Dry_Weight_g)) %>%
-#   mutate(Weight_St_Error=Weight_SD/sqrt(Weight_n)) %>% 
-#   ungroup() %>% 
-#   mutate(Grazing_Treatment=ifelse(Grazing_Treatment=="HG","High Impact Grazing",ifelse(Grazing_Treatment=="LG","Light Grazing",ifelse(Grazing_Treatment=="NG","Rest from Grazing",Grazing_Treatment))))
 
 ###### Relative Weight ####
 Relative_Weight<-Weight_Data_Summed %>% 
@@ -753,8 +688,6 @@ RDA_Meta_Data <- Abundance_Wide_Weight[,1:3]
 
 ###### RDA year*grazing ####
 
-#### CCA by Year*Grazing Treatment:  n=3  ####
-
 RDA_Year_Grazing_Avg <- rda(RDA_Data ~ Year*Grazing_Treatment, data=RDA_Meta_Data)
 
 summary(RDA_Year_Grazing_Avg)
@@ -778,12 +711,7 @@ capture.output(anova(RDA_Year_Grazing_Avg, by = "terms"), file = "RDA_ModelAnova
 anova(RDA_Year_Grazing_Avg, by = "axis")  
 capture.output(anova(RDA_Year_Grazing_Avg, by = "axis"), file = "RDA_ModelAnova_Axis.txt")
 
-
-library(vegan)
-library(dplyr)
-library(ggplot2)
-library(ggrepel)
-
+###### RDA Graph ####
 RDA_Meta_Data <- RDA_Meta_Data %>%
   mutate(Year_Grazing = interaction(Year, Grazing_Treatment, sep = "_", drop = TRUE))
 
