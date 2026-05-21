@@ -20,7 +20,7 @@ library(pairwiseAdonis)
 library(ggpattern)
 
 #set working directory - UMD mac
-setwd("/Users/kathryn/Library/CloudStorage/Box-Box/Projects/Dissertation/Data/Insect_Data")
+setwd("/Users/kjbloodw/Library/CloudStorage/Box-Box/Projects/Dissertation/Data/Insect_Data")
 
 # Set Working Directory - Mac
 setwd("~/Box-Box/Projects/Dissertation/Data/Insect_Data")
@@ -4151,3 +4151,248 @@ Feeding_Guild_2022<-ggplot(Relative_Count_Family,aes(x=Grazing_Treatment,y=Avera
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 75),legend.text=element_text(size=75),axis.title.y=element_blank(),axis.text.y=element_blank())+
   geom_text(x=1, y=1.2,label="C.2022",size=20)
+
+
+
+
+###############
+
+#### Absolute Arthropod Weight by Order Graphs ####
+
+Order_Weight_1<-Weight_Data_Summed %>% 
+  filter(Correct_Order!="Body Parts" & Correct_Order!="Body_Parts" & Correct_Order!="Unknown" & Correct_Order!="unknown" & Correct_Order!="Unknown_1")
+
+Order_Weight_1$Grazing_Treatment <- factor(Order_Weight_1$Grazing_Treatment, levels = c("Cattle Removal", "Destock Grazing", "High Impact Grazing")) 
+
+
+Order_Weight<-Order_Weight_1%>%  
+  filter(Plot!="NA") %>% 
+  group_by(Year,Grazing_Treatment,Correct_Order) %>% 
+  summarise(Average_Weight=mean(Dry_Weight_g),Weight_SD=sd(Dry_Weight_g),Weight_n=length(Dry_Weight_g)) %>%
+  mutate(Weight_St_Error=Weight_SD/sqrt(Weight_n)) %>% 
+  ungroup()
+
+
+Order_Weight_Faceted <- ggplot(
+  Order_Weight,
+  aes(x = Year, y = Average_Weight, fill = Grazing_Treatment)
+) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  geom_errorbar(
+    aes(
+      ymin = Average_Weight - Weight_St_Error,
+      ymax = Average_Weight + Weight_St_Error
+    ),
+    position = position_dodge(width = 0.9),
+    width = 0.5, size = 1
+  ) +
+  facet_wrap(~ Correct_Order, scales = "free_y") +
+  xlab("Year") +
+  ylab("Order Biomass (g)") +
+  scale_fill_manual(
+    values = c("#e8c599", "#bc6022", "#b72818"),
+    labels = c("Cattle Removal", "Destock", "High Impact Grazing")
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) +
+  theme(
+    legend.background = element_blank(),
+    legend.position   = c(0.85, 0.10),
+    legend.title      = element_blank(),
+    legend.text       = element_text(size = 14),
+    strip.text        = element_text(size = 14, face = "bold"),
+    axis.title.y      = element_text(size = 16),
+    axis.text.y       = element_text(size = 12),
+    axis.title.x      = element_text(size = 16),
+    axis.text.x       = element_text(size = 12)
+  )
+
+Order_Weight_Faceted
+
+#### Normality: Araneae Biomass ####
+#2020
+Araneae_Biomass_2020 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Araneae"))
+ols_plot_resid_hist(Araneae_Biomass_2020) 
+ols_test_normality(Araneae_Biomass_2020) #normal
+
+#2021
+Araneae_Biomass_2021 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Araneae"))
+ols_plot_resid_hist(Araneae_Biomass_2021) 
+ols_test_normality(Araneae_Biomass_2021) #normal
+
+#2022
+Araneae_Biomass_2022 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Araneae"))
+ols_plot_resid_hist(Araneae_Biomass_2022) 
+ols_test_normality(Araneae_Biomass_2022) #normalish
+
+#### Stats: Plot Weights by Grazing Treatment####
+#2020
+Aranaea_Biomass_2020_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Araneae"))
+anova(Aranaea_Biomass_2020_Glmm) #not significant
+
+#2021
+Aranaea_Biomass_2021_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Araneae"))
+anova(Aranaea_Biomass_2021_Glmm) #not significant
+
+#2022
+Aranaea_Biomass_2022_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Araneae"))
+anova(Aranaea_Biomass_2022_Glmm) #not significant
+
+#### Normality: Coleoptera Biomass ####
+#2020
+Coleoptera_Biomass_2020 <- lm(sqrt(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Coleoptera"))
+ols_plot_resid_hist(Coleoptera_Biomass_2020) 
+ols_test_normality(Coleoptera_Biomass_2020) #normal
+
+#2021
+Coleoptera_Biomass_2021 <- lm(sqrt(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Coleoptera"))
+ols_plot_resid_hist(Coleoptera_Biomass_2021) 
+ols_test_normality(Coleoptera_Biomass_2021) #normal
+
+#2022
+Coleoptera_Biomass_2022 <- lm(sqrt(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Coleoptera"))
+ols_plot_resid_hist(Coleoptera_Biomass_2022) 
+ols_test_normality(Coleoptera_Biomass_2022) #normalish
+
+#### Stats: Coleoptera Biomass ####
+#2020
+Coleoptera_Biomass_2020_Glmm <- lmer(sqrt(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Coleoptera"))
+anova(Coleoptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Coleoptera_Biomass_2021_Glmm <- lmer(sqrt(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Coleoptera"))
+anova(Coleoptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Coleoptera_Biomass_2022_Glmm <- lmer(sqrt(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Coleoptera"))
+anova(Coleoptera_Biomass_2022_Glmm) #not significant
+
+#### Normality: Diptera Biomass ####
+#2020
+Diptera_Biomass_2020 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Diptera"))
+ols_plot_resid_hist(Diptera_Biomass_2020) 
+ols_test_normality(Diptera_Biomass_2020) #not normal
+
+#2021
+Diptera_Biomass_2021 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Diptera"))
+ols_plot_resid_hist(Diptera_Biomass_2021) 
+ols_test_normality(Diptera_Biomass_2021) #normal
+
+#2022
+Diptera_Biomass_2022 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Diptera"))
+ols_plot_resid_hist(Diptera_Biomass_2022) 
+ols_test_normality(Diptera_Biomass_2022) #normalish
+
+#### Stats: Diptera Biomass ####
+#2020
+Diptera_Biomass_2020_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Diptera"))
+anova(Diptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Diptera_Biomass_2021_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Diptera"))
+anova(Diptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Diptera_Biomass_2022_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Diptera"))
+anova(Diptera_Biomass_2022_Glmm) #not significant
+
+#### Normality: Hemiptera Biomass ####
+#2020
+Hemiptera_Biomass_2020 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Hemiptera"))
+ols_plot_resid_hist(Hemiptera_Biomass_2020) 
+ols_test_normality(Hemiptera_Biomass_2020) #normal
+
+#2021
+Hemiptera_Biomass_2021 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Hemiptera"))
+ols_plot_resid_hist(Hemiptera_Biomass_2021) 
+ols_test_normality(Hemiptera_Biomass_2021) #normal
+
+#2022
+Hemiptera_Biomass_2022 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Hemiptera"))
+ols_plot_resid_hist(Hemiptera_Biomass_2022) 
+ols_test_normality(Hemiptera_Biomass_2022) #normal
+
+#### Stats: Hemiptera Biomass ####
+#2020
+Hemiptera_Biomass_2020_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Hemiptera"))
+anova(Hemiptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Hemiptera_Biomass_2021_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Hemiptera"))
+anova(Hemiptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Hemiptera_Biomass_2022_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Hemiptera"))
+anova(Hemiptera_Biomass_2022_Glmm) #not significant
+
+#### Normality: Hymenoptera Biomass ####
+#2020
+Hymenoptera_Biomass_2020 <- lm(sqrt(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Hymenoptera"))
+ols_plot_resid_hist(Hymenoptera_Biomass_2020) 
+ols_test_normality(Hymenoptera_Biomass_2020) #normalish
+
+#2021
+Hymenoptera_Biomass_2021 <- lm((Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Hymenoptera"))
+ols_plot_resid_hist(Hymenoptera_Biomass_2021) 
+ols_test_normality(Hymenoptera_Biomass_2021) #normal
+
+#2022
+Hymenoptera_Biomass_2022 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Hymenoptera"))
+ols_plot_resid_hist(Hymenoptera_Biomass_2022) 
+ols_test_normality(Hymenoptera_Biomass_2022) #normalish
+
+#### Stats: Hymenoptera Biomass ####
+#2020
+Hymenoptera_Biomass_2020_Glmm <- lmer(sqrt(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Hymenoptera"))
+anova(Hymenoptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Hymenoptera_Biomass_2021_Glmm <- lmer((Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Hymenoptera"))
+anova(Hymenoptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Hymenoptera_Biomass_2022_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Hymenoptera"))
+anova(Hymenoptera_Biomass_2022_Glmm) #not significant
+
+#### Normality: Orthoptera Biomass ####
+#2020
+Orthoptera_Biomass_2020 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Orthoptera"))
+ols_plot_resid_hist(Orthoptera_Biomass_2020) 
+ols_test_normality(Orthoptera_Biomass_2020) #normal
+
+#2021
+Orthoptera_Biomass_2021 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Orthoptera"))
+ols_plot_resid_hist(Orthoptera_Biomass_2021) 
+ols_test_normality(Orthoptera_Biomass_2021) #normal
+
+#2022
+Orthoptera_Biomass_2022 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Orthoptera"))
+ols_plot_resid_hist(Orthoptera_Biomass_2022) 
+ols_test_normality(Orthoptera_Biomass_2022) #normal
+
+#### Stats: Orthoptera Biomass ####
+#2020
+Orthoptera_Biomass_2020_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2020 & Correct_Order == "Orthoptera"))
+anova(Orthoptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Orthoptera_Biomass_2021_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2021 & Correct_Order == "Orthoptera"))
+anova(Orthoptera_Biomass_2021_Glmm) #significant
+summary(glht(Orthoptera_Biomass_2021_Glmm, linfct = mcp(Grazing_Treatment = "Tukey")), test = adjusted(type = "BH")) #NG-LG (p=0.33), #LG-HG (0.0048), NG-HG (0.00278)
+
+
+#2022
+Orthoptera_Biomass_2022_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Orthoptera"))
+anova(Orthoptera_Biomass_2022_Glmm) #not significant
+
+#### Normality: Thysanoptera Biomass ####
+
+
+#2022
+Thysanoptera_Biomass_2022 <- lm(log(Dry_Weight_g) ~ Grazing_Treatment, data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Thysanoptera"))
+ols_plot_resid_hist(Thysanoptera_Biomass_2022) 
+ols_test_normality(Thysanoptera_Biomass_2022) #normalish
+
+#### Stats: Thysanoptera Biomass ####
+#2022
+Thysanoptera_Biomass_2022_Glmm <- lmer(log(Dry_Weight_g) ~ Grazing_Treatment + (1 | Block:Grazing_Treatment) , data = subset(Weight_Data_Summed, Year == 2022 & Correct_Order == "Thysanoptera"))
+anova(Thysanoptera_Biomass_2022_Glmm) #not significant
