@@ -650,7 +650,7 @@ richness_2020_Weight+
   plot_layout(ncol = 3,nrow = 2)
 #Save at 2500x2000
 
-#### Figure 2: Plot Weight Figure #### 
+#### Figure 2: Plot Weight & Proportion Figure #### 
 
 ###### Figure 2a-c ####
 
@@ -741,7 +741,7 @@ Plot_Weight_D_2020_Glmm_Pad <- lmer(sqrt(GrTrt_Weight) ~ Grazing_Treatment + (1 
 anova(Plot_Weight_D_2020_Glmm_Pad) #not significant
 
 #2021
-Plot_Weight_D_2021_Glmm_Pad <- lmer(log(GrTrt_Weight) ~ Grazing_Treatment + (1 | Block) , data = subset(Weight_Data_Summed_dvac,Year==2021))
+Plot_Weight_D_2021_Glmm_Pad <- lmer(log(GrTrt_Weight) ~ (Grazing_Treatment) + (1 | Block) , data = subset(Weight_Data_Summed_dvac,Year==2021))
 summary(Plot_Weight_D_2021_Glmm_Pad)
 anova(Plot_Weight_D_2021_Glmm_Pad) # p=0.05189
 ###post hoc test for lmer test ##
@@ -801,7 +801,6 @@ Order_Weight_2022<-ggplot(subset(Relative_Weight,Year==2022),aes(x=Grazing_Treat
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 55),legend.text=element_text(size=45))+
   geom_text(x=0.6, y=1.2, label="f)",size=20)
-
 
 ###### Figure 2g-j ####
 
@@ -905,13 +904,13 @@ capture.output(scores(RDA_Year_Grazing_Avg, c(1:4), scaling=3), file = "RDA_Scor
 
 #do some stats
 #overall model significant; this uses vegan's anova.cca function; if NS, should not run univariate tests.
-anova(RDA_Year_Grazing_Avg)   
+anova.cca(RDA_Year_Grazing_Avg)   
 capture.output(anova(RDA_Year_Grazing_Avg), file = "RDA_ModelAnova.txt")
 #test significance by terms (= PerMANOVA)
-anova(RDA_Year_Grazing_Avg, by = "terms")  
+anova.cca(RDA_Year_Grazing_Avg, by = "terms")  
 capture.output(anova(RDA_Year_Grazing_Avg, by = "terms"), file = "RDA_ModelAnova_Terms.txt")
 #justifies subsequent univariate tests for axes that are significant
-anova(RDA_Year_Grazing_Avg, by = "axis")  
+anova.cca(RDA_Year_Grazing_Avg, by = "axis")  
 capture.output(anova(RDA_Year_Grazing_Avg, by = "axis"), file = "RDA_ModelAnova_Axis.txt")
 
 ###### RDA Graph ####
@@ -932,6 +931,9 @@ sp_df <- data.frame(
   RDA2 = sp_sc[,2],
   label = rownames(sp_sc)
 )
+
+
+sites_df$Grazing_Treatment <- factor(sites_df$Grazing_Treatment, levels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing"))
 
 ggplot(sites_df, aes(RDA1, RDA2)) +
   geom_point(aes(color = Year, shape = Grazing_Treatment),
@@ -954,7 +956,7 @@ ggplot(sites_df, aes(RDA1, RDA2)) +
   theme_minimal() + 
   scale_fill_manual(values=c("#4c956c","#e3b23c","#08415c"), labels = c("2020", "2021", "2022"),name="Year")+
   scale_color_manual(values=c("#4c956c","#e3b23c","#08415c"), labels = c("2020", "2021", "2022"),name="Year")+
-  scale_shape_manual(values=c(15,16,17),name="Grazing Treatment")+
+  scale_shape_manual(values=c(15,16,17),name="Grazing Regime")+
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
@@ -968,13 +970,12 @@ ggplot(sites_df, aes(RDA1, RDA2)) +
     legend.position = "inside",
     legend.position.inside = c(0.12,0.18)
   ) +
-  labs(color = "Year", fill = "Year", shape = "Grazing_Treatment")
+  labs(color = "Year", fill = "Year", shape = "Regime")
 #save as 1100 x 800
 
 
 #### Figure S2: Feeding Guild ####
 
-#### Abundance by Count: Family ####
 Abundance_Family_Guild<-ID_Data_Official %>% 
   group_by(Collection_Method,Year,Block,Grazing_Treatment,Plot,Correct_Order,Correct_Family) %>% 
   summarise(Abundance=length(Sample_Number)) %>% 
@@ -1061,7 +1062,6 @@ Feeding_Guild_2022<-ggplot(subset(Relative_Count_Family,Year==2022),aes(x=Grazin
   theme(text = element_text(size = 55),legend.text=element_text(size=45),axis.title.y=element_blank(),axis.text.y=element_blank())+
   geom_text(x=1, y=1.2,label="c) 2022",size=20)
 
-#### Create Feeding Guild Graph ####
 Feeding_Guild_2020+
   Feeding_Guild_2021+
   Feeding_Guild_2022+
