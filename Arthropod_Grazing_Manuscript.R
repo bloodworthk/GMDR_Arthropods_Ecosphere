@@ -4167,7 +4167,9 @@ Order_Weight_1$Grazing_Treatment <- factor(Order_Weight_1$Grazing_Treatment, lev
 
 Order_Weight<-Order_Weight_1%>%  
   filter(Plot!="NA") %>% 
-  group_by(Year,Grazing_Treatment,Correct_Order) %>% 
+  group_by(Year,Grazing_Treatment,Block,Correct_Order) %>% 
+  summarise(Average_Weight=mean(Dry_Weight_g,na.rm=T)) %>% 
+  ungroup()
   summarise(Average_Weight=mean(Dry_Weight_g),Weight_SD=sd(Dry_Weight_g),Weight_n=length(Dry_Weight_g)) %>%
   mutate(Weight_St_Error=Weight_SD/sqrt(Weight_n)) %>% 
   ungroup()

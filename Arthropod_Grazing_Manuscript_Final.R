@@ -543,6 +543,7 @@ anova(Orderrichness_2020_Glmm_Weight_Pad) #not significant
 # 2021 Weight
 Orderrichness_2021_Glmm_Weight_Pad <- lmer((richness) ~ Grazing_Treatment + (1 | Block) , data = subset(CommunityMetrics_Weight,Year==2021))
 anova(Orderrichness_2021_Glmm_Weight_Pad) #not significant
+
 # 2022 Weight
 Orderrichness_2022_Glmm_Weight_Pad <- lmer((richness) ~ Grazing_Treatment + (1 | Block) , data = subset(CommunityMetrics_Weight,Year==2022))
 anova(Orderrichness_2022_Glmm_Weight_Pad) #not significant
@@ -664,7 +665,7 @@ Dvac_2020_Plot<-ggplot(subset(Weight_by_Grazing_dvac,Year==2020),aes(x=Grazing_T
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Average_Weight-Weight_St_Error,ymax=Average_Weight+Weight_St_Error),position=position_dodge(),width=0.2,size=2)+
   xlab("Grazing Regime")+
-  ylab("Average Plot Biomass (g)")+
+  ylab("Average Paddock Biomass (g)")+
   ggtitle("2020") +
   theme(legend.background=element_blank(),legend.position = "none")+
   scale_fill_manual(values=c("#e8c599","#bc6022","#b72818"), labels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing")) +
@@ -684,7 +685,6 @@ Dvac_2021_Plot<-ggplot(subset(Weight_by_Grazing_dvac,Year==2021),aes(x=Grazing_T
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Average_Weight-Weight_St_Error,ymax=Average_Weight+Weight_St_Error),position=position_dodge(),width=0.2,size=2)+
   xlab("Grazing Regime")+
-  ylab("Plot Biomass (g)")+
   ggtitle("2021") +
   theme(legend.background=element_blank())+ 
   scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
@@ -707,7 +707,6 @@ Dvac_2022_Plot<-ggplot(subset(Weight_by_Grazing_dvac,Year==2022),aes(x=Grazing_T
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   geom_errorbar(aes(ymin=Average_Weight-Weight_St_Error,ymax=Average_Weight+Weight_St_Error),position=position_dodge(),width=0.2,size=2)+
   xlab("Grazing Regime")+
-  ylab("Plot Biomass(g)")+
   ggtitle("2022") +
   theme(legend.background=element_blank())+
   scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
@@ -752,7 +751,277 @@ Plot_Weight_D_2022_Glmm_Pad <- lmer(log(GrTrt_Weight) ~ Grazing_Treatment + (1 |
 anova(Plot_Weight_D_2022_Glmm_Pad) #not significant
 
 
-###### Figure 2d-f ####
+###### Figure 2d-f: Arthropod Order ####
+
+#create dataframe that just has dvac samples in it
+Order_Weight<-Weight_Data_Summed %>% 
+  filter(Plot!="NA") %>% 
+  filter(Correct_Order!="Body Parts" & Correct_Order!="Body_Parts" & Correct_Order!="Unknown" & Correct_Order!="unknown" & Correct_Order!="Unknown_1") %>% 
+  #average across plots (n=3)
+  group_by(Year,Block,Grazing_Treatment,Correct_Order) %>% 
+  summarise(Order_Weight=mean(Dry_Weight_g)) %>% 
+  ungroup()
+
+Order_Weight$Grazing_Treatment <- factor(Order_Weight$Grazing_Treatment, levels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing"))
+
+Order_Weight_Figure<-Order_Weight %>% 
+  #mean and SD for each treatment & year
+  group_by(Year,Grazing_Treatment,Correct_Order) %>% 
+  summarise(Average_Weight=mean(Order_Weight),Weight_SD=sd(Order_Weight),Weight_n=length(Order_Weight)) %>% 
+  mutate(Weight_St_Error=Weight_SD/sqrt(Weight_n)) %>% 
+  ungroup()
+
+##reorder bar graphs##
+Order_Weight_Figure$Grazing_Treatment <- factor(Order_Weight_Figure$Grazing_Treatment, levels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing"))
+
+# 2020 Average Plot Weight
+Orthoptera_2020<-ggplot(subset(Order_Weight_Figure,Year==2020 & Correct_Order=="Orthoptera"),aes(x=Grazing_Treatment,y=Average_Weight,fill=Grazing_Treatment)) +
+  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
+  geom_bar(stat="identity",position = "dodge")+
+  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
+  geom_errorbar(aes(ymin=Average_Weight-Weight_St_Error,ymax=Average_Weight+Weight_St_Error),position=position_dodge(),width=0.2,size=2)+
+  xlab("Grazing Regime")+
+  ylab("Average Orthoptera Biomass (g)")+
+  theme(legend.background=element_blank(),legend.position = "none")+
+  scale_fill_manual(values=c("#e8c599","#bc6022","#b72818"), labels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing")) +
+  #theme(axis.title.x=element_blank(),axis.text.x=element_blank())+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
+  theme(axis.title.y=element_text(size=55),axis.text.y=element_text(size=55),axis.title.x=element_text(size=55),axis.text.x=element_text(size=55),legend.position = "none",plot.title=element_text(hjust=0.5))+
+  #Make the y-axis extend to 50
+  expand_limits(y=0.4)+
+  scale_y_continuous(labels = label_number(accuracy = 0.01))+
+  theme(text = element_text(size = 55))+
+  geom_text(x=0.6, y=0.39, label="d)",size=20)
+
+# 2021 Average Plot Weight
+Orthoptera_2021<-ggplot(subset(Order_Weight_Figure,Year==2021 & Correct_Order=="Orthoptera"),aes(x=Grazing_Treatment,y=Average_Weight,fill=Grazing_Treatment)) +
+  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
+  geom_bar(stat="identity",position = "dodge")+
+  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
+  geom_errorbar(aes(ymin=Average_Weight-Weight_St_Error,ymax=Average_Weight+Weight_St_Error),position=position_dodge(),width=0.2,size=2)+
+  xlab("Grazing Regime")+
+  ylab("Average Orthoptera Biomass (g)")+
+  theme(legend.background=element_blank())+ 
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
+  scale_fill_manual(values=c("#e8c599","#bc6022","#b72818"), labels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing"))+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.title.x=element_text(size=55),axis.text.x=element_text(size=55),legend.position = "none",plot.title=element_text(hjust=0.5))+
+  #Make the y-axis extend to 50
+  expand_limits(y=0.4)+
+  scale_y_continuous(labels = label_number(accuracy = 0.01))+
+  theme(text = element_text(size = 55))+
+  geom_text(x=0.6, y=0.39, label="e)",size=20)+
+  #no grazing is different than high grazing, low grazing is different than high grazing, no and low grazing are the same
+  annotate("text",x=1,y=0.13,label="a",size=20)+ #no grazing
+  annotate("text",x=2,y=0.09,label="a",size=20)+ #low grazing
+  annotate("text",x=3,y=0.05,label="b",size=20) #high grazing
+
+# 2022 Average Plot Weight
+Orthoptera_2022<-ggplot(subset(Order_Weight_Figure,Year==2022 & Correct_Order=="Orthoptera"),aes(x=Grazing_Treatment,y=Average_Weight,fill=Grazing_Treatment)) +
+  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
+  geom_bar(stat="identity",position = "dodge")+
+  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
+  geom_errorbar(aes(ymin=Average_Weight-Weight_St_Error,ymax=Average_Weight+Weight_St_Error),position=position_dodge(),width=0.2,size=2)+
+  xlab("Grazing Regime")+
+  ylab("Average Orthoptera Biomass (g)")+
+  theme(legend.background=element_blank())+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
+  scale_fill_manual(values=c("#e8c599","#bc6022","#b72818"), labels = c("Rest from Grazing", "Light Grazing", "High Impact Grazing"))+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.title.x=element_text(size=55),axis.text.x=element_text(size=55),legend.position = "none",plot.title=element_text(hjust=0.5))+
+  #Make the y-axis extend to 50
+  expand_limits(y=0.4)+
+  scale_y_continuous(labels = label_number(accuracy = 0.01))+
+  theme(text = element_text(size = 55))+
+  geom_text(x=0.6, y=0.39, label="f)",size=20)
+
+###### Create Figure 2 ####
+Dvac_2020_Plot+
+  Dvac_2021_Plot+
+  Dvac_2022_Plot+
+  Orthoptera_2020 +
+  Orthoptera_2021 +
+  Orthoptera_2022 +
+  plot_layout(ncol = 3,nrow = 2)
+#Save at 2500x2000
+
+###### Normality & Stats: Figure 2d-f ####
+######## Normality: Araneae Biomass ####
+#2020
+Araneae_Biomass_2020 <- lm((Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2020 & Correct_Order == "Araneae"))
+ols_plot_resid_hist(Araneae_Biomass_2020) 
+ols_test_normality(Araneae_Biomass_2020) #normal
+
+#2021
+Araneae_Biomass_2021 <- lm((Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2021 & Correct_Order == "Araneae"))
+ols_plot_resid_hist(Araneae_Biomass_2021) 
+
+#2022
+Araneae_Biomass_2022 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2022 & Correct_Order == "Araneae"))
+ols_plot_resid_hist(Araneae_Biomass_2022) 
+ols_test_normality(Araneae_Biomass_2022) #normal
+
+###### Stats: Araneae Biomass ####
+
+#2020
+Aranaea_Biomass_2020_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2020 & Correct_Order == "Araneae"))
+anova(Aranaea_Biomass_2020_Glmm) #not significant
+
+#2021
+Aranaea_Biomass_2021_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2021 & Correct_Order == "Araneae"))
+anova(Aranaea_Biomass_2021_Glmm) #not significant
+
+#2022
+Aranaea_Biomass_2022_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2022 & Correct_Order == "Araneae"))
+anova(Aranaea_Biomass_2022_Glmm) #not significant
+
+###### Normality: Coleoptera Biomass ####
+#2020
+Coleoptera_Biomass_2020 <- lm((Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2020 & Correct_Order == "Coleoptera"))
+ols_plot_resid_hist(Coleoptera_Biomass_2020) 
+ols_test_normality(Coleoptera_Biomass_2020) #normal
+
+#2021
+Coleoptera_Biomass_2021 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2021 & Correct_Order == "Coleoptera"))
+ols_plot_resid_hist(Coleoptera_Biomass_2021) 
+ols_test_normality(Coleoptera_Biomass_2021) #normal
+
+#2022
+Coleoptera_Biomass_2022 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2022 & Correct_Order == "Coleoptera"))
+ols_plot_resid_hist(Coleoptera_Biomass_2022) 
+ols_test_normality(Coleoptera_Biomass_2022) #normalish
+
+###### Stats: Coleoptera Biomass ####
+#2020
+Coleoptera_Biomass_2020_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2020 &Correct_Order == "Coleoptera"))
+anova(Coleoptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Coleoptera_Biomass_2021_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2021 &Correct_Order == "Coleoptera"))
+anova(Coleoptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Coleoptera_Biomass_2022_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2022 &Correct_Order == "Coleoptera"))
+anova(Coleoptera_Biomass_2022_Glmm) #not significant
+
+###### Normality: Diptera Biomass ####
+#2020
+Diptera_Biomass_2020 <- lm((Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2020 & Correct_Order == "Diptera"))
+ols_plot_resid_hist(Diptera_Biomass_2020) 
+ols_test_normality(Diptera_Biomass_2020) #normal
+
+#2021
+Diptera_Biomass_2021 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2021 & Correct_Order == "Diptera"))
+ols_plot_resid_hist(Diptera_Biomass_2021) 
+
+#2022
+Diptera_Biomass_2022 <- lm(log(Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2022 & Correct_Order == "Diptera"))
+ols_plot_resid_hist(Diptera_Biomass_2022) 
+ols_test_normality(Diptera_Biomass_2022) #normalish
+
+###### Stats: Diptera Biomass ####
+#2020
+Diptera_Biomass_2020_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2020 & Correct_Order == "Diptera"))
+anova(Diptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Diptera_Biomass_2021_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2021 &Correct_Order == "Diptera"))
+anova(Diptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Diptera_Biomass_2022_Glmm <- lmer(log(Order_Weight) ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2022 &Correct_Order == "Diptera"))
+anova(Diptera_Biomass_2022_Glmm) #not significant
+
+###### Normality: Hemiptera Biomass ####
+#2020
+Hemiptera_Biomass_2020 <- lm((Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2020 & Correct_Order == "Hemiptera"))
+ols_plot_resid_hist(Hemiptera_Biomass_2020) 
+ols_test_normality(Hemiptera_Biomass_2020) #normal
+
+#2021
+Hemiptera_Biomass_2021 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2021 & Correct_Order == "Hemiptera"))
+ols_plot_resid_hist(Hemiptera_Biomass_2021) 
+ols_test_normality(Hemiptera_Biomass_2021) #normal
+
+#2022
+Hemiptera_Biomass_2022 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2022 & Correct_Order == "Hemiptera"))
+ols_plot_resid_hist(Hemiptera_Biomass_2022) 
+ols_test_normality(Hemiptera_Biomass_2022) #normal
+
+###### Stats: Hemiptera Biomass ####
+#2020
+Hemiptera_Biomass_2020_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2020 & Correct_Order == "Hemiptera"))
+anova(Hemiptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Hemiptera_Biomass_2021_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2021 &Correct_Order == "Hemiptera"))
+anova(Hemiptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Hemiptera_Biomass_2022_Glmm <- lmer((Order_Weight) ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2022 &Correct_Order == "Hemiptera"))
+anova(Hemiptera_Biomass_2022_Glmm) #not significant
+
+###### Normality: Hymenoptera Biomass ####
+#2020
+Hymenoptera_Biomass_2020 <- lm(log(Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2020 & Correct_Order == "Hymenoptera"))
+ols_plot_resid_hist(Hymenoptera_Biomass_2020) 
+ols_test_normality(Hymenoptera_Biomass_2020) #normal
+
+#2021
+Hymenoptera_Biomass_2021 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2021 & Correct_Order == "Hymenoptera"))
+ols_plot_resid_hist(Hymenoptera_Biomass_2021) 
+ols_test_normality(Hymenoptera_Biomass_2021) #normal
+
+#2022
+Hymenoptera_Biomass_2022 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2022 & Correct_Order == "Hymenoptera"))
+ols_plot_resid_hist(Hymenoptera_Biomass_2022) 
+ols_test_normality(Hymenoptera_Biomass_2022) #normal
+
+###### Stats: Hymenoptera Biomass ####
+#2020
+Hymenoptera_Biomass_2020_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2020 & Correct_Order == "Hymenoptera"))
+anova(Hymenoptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Hymenoptera_Biomass_2021_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2021 &Correct_Order == "Hymenoptera"))
+anova(Hymenoptera_Biomass_2021_Glmm) #not significant
+
+#2022
+Hymenoptera_Biomass_2022_Glmm <- lmer((Order_Weight) ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2022 &Correct_Order == "Hymenoptera"))
+anova(Hymenoptera_Biomass_2022_Glmm) #not significant
+
+###### Normality: Orthoptera Biomass ####
+#2020
+Orthoptera_Biomass_2020 <- lm((Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2020 & Correct_Order == "Orthoptera"))
+ols_plot_resid_hist(Orthoptera_Biomass_2020) 
+ols_test_normality(Orthoptera_Biomass_2020) #normal
+
+#2021
+Orthoptera_Biomass_2021 <- lm(log(Order_Weight) ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2021 & Correct_Order == "Orthoptera"))
+ols_plot_resid_hist(Orthoptera_Biomass_2021) 
+ols_test_normality(Orthoptera_Biomass_2021) #normal
+
+#2022
+Orthoptera_Biomass_2022 <- lm(Order_Weight ~ Grazing_Treatment, data = subset(Order_Weight, Year == 2022 & Correct_Order == "Orthoptera"))
+ols_plot_resid_hist(Orthoptera_Biomass_2022) 
+ols_test_normality(Orthoptera_Biomass_2022) #normal
+
+###### Stats: Orthoptera Biomass ####
+#2020
+Orthoptera_Biomass_2020_Glmm <- lmer(Order_Weight ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2020 & Correct_Order == "Orthoptera"))
+anova(Orthoptera_Biomass_2020_Glmm) #not significant
+
+#2021
+Orthoptera_Biomass_2021_Glmm <- lmer(log(Order_Weight) ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2021 &Correct_Order == "Orthoptera"))
+anova(Orthoptera_Biomass_2021_Glmm) #significant
+
+summary(glht(Orthoptera_Biomass_2021_Glmm, linfct = mcp(Grazing_Treatment = "Tukey")), test = adjusted(type = "BH")) #NG-LG (p=0.09455), #LG-HG (0.09455), NG-HG (0.00178)
+
+#2022
+Orthoptera_Biomass_2022_Glmm <- lmer((Order_Weight) ~ Grazing_Treatment + (1 | Block) , data = subset(Order_Weight, Year == 2022 &Correct_Order == "Orthoptera"))
+anova(Orthoptera_Biomass_2022_Glmm) #not significant
+
+
+#### Figure 3: Proportion ####
+###### Figure 3a-c ####
 
 
 ##reorder bar graphs##
@@ -764,45 +1033,48 @@ Order_Weight_2020<-ggplot(subset(Relative_Weight,Year==2020),aes(x=Grazing_Treat
   geom_bar(stat="identity")+
   xlab("Grazing  Regime")+
   ylab("Proportion by \n Biomass (g)")+
+  ggtitle("2020") +
   theme(legend.background=element_blank())+
   scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
   scale_fill_manual(values=c("#845749","#FBECC5","#D3DEDF", "#789193","#BABEBF","#B89984"), labels=c("Araneae","Coleoptera","Diptera","Hemiptera","Hymenoptera","Orthoptera"), name = "Order")+
-  theme(axis.title.x=element_blank(),axis.text.x=element_blank(),legend.position = "none")+
+  theme(axis.title.x=element_blank(),axis.text.x=element_blank(),legend.position = "none",plot.title=element_text(hjust=0.5))+
   expand_limits(y=1.2)+
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 55),legend.text=element_text(size=45),axis.title.y=element_text(size=55),axis.text.y=element_text(size=55))+
-  geom_text(x=0.6, y=1.2, label="d)",size=20)
+  geom_text(x=0.6, y=1.2, label="a)",size=20)
 
 Order_Weight_2021<-ggplot(subset(Relative_Weight,Year==2021),aes(x=Grazing_Treatment,y=Average_RelativeWeight,fill=Correct_Order, position = "stack"))+
   geom_bar(stat="identity")+
   xlab("Grazing  Regime")+
   ylab("Proportion by Biomass (g)")+
+  ggtitle("2021") +
   theme(legend.background=element_blank())+
   scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
   scale_fill_manual(values=c("#845749","#FBECC5","#D3DEDF", "#789193","#BABEBF","#B89984"), labels=c("Araneae","Coleoptera","Diptera","Hemiptera","Hymenoptera","Orthoptera"), name = "Order")+
   #scale_fill_manual(values=c("grey30","grey10"), labels=c("Orthoptera Weight","Plot Weight"))+
-  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),legend.position = "none")+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),legend.position = "none",plot.title=element_text(hjust=0.5))+
   expand_limits(y=1.2)+
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 55),legend.text=element_text(size=45))+
-  geom_text(x=0.6, y=1.2,label="e)",size=20)
+  geom_text(x=0.6, y=1.2,label="b)",size=20)
 
 Order_Weight_2022<-ggplot(subset(Relative_Weight,Year==2022),aes(x=Grazing_Treatment,y=Average_RelativeWeight,fill=Correct_Order, position = "stack"))+
   geom_bar(stat="identity")+
   #Label the x-axis "Treatment"
   xlab("Grazing  Regime")+
   ylab("Proportion by Biomass (g)")+ 
+  ggtitle("2022") +
   theme(legend.background=element_blank())+
   scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
   scale_fill_manual(values=c("#845749","#FBECC5","#D3DEDF", "#789193","#BABEBF","#66676C","#403025","#B89984","#CABEB9","#72544D"), labels=c("Araneae","Coleoptera","Diptera","Hemiptera","Hymenoptera","Lepidoptera","Neuroptera","Orthoptera","Thysanoptera","Trombiculidae"), name = "Order")+
   #scale_fill_manual(values=c("grey30","grey10"), labels=c("Orthoptera Weight","Plot Weight"))+
-  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),legend.position = "none")+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),axis.title.x=element_blank(),axis.text.x=element_blank(),legend.position = "none",plot.title=element_text(hjust=0.5))+
   expand_limits(y=1.2)+
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 55),legend.text=element_text(size=45))+
-  geom_text(x=0.6, y=1.2, label="f)",size=20)
+  geom_text(x=0.6, y=1.2, label="c)",size=20)
 
-###### Figure 2g-j ####
+###### Figure 2d-f ####
 
 
 ##reorder bar graphs##
@@ -823,7 +1095,7 @@ Order_Count_2020<-ggplot(subset(Relative_Count,Year==2020),aes(x=Grazing_Treatme
   expand_limits(y=1.2)+
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 55),legend.text=element_text(size=45),axis.title.y=element_text(size=55),axis.text.y=element_text(size=55))+
-  geom_text(x=0.6, y=1.2,label="g)",size=20)
+  geom_text(x=0.6, y=1.2,label="d)",size=20)
 
 Order_Count_2021<-ggplot(subset(Relative_Count,Year==2021),aes(x=Grazing_Treatment,y=Average_RelativeCount,fill=Correct_Order, position = "stack"))+
   geom_bar(stat="identity")+
@@ -839,7 +1111,7 @@ Order_Count_2021<-ggplot(subset(Relative_Count,Year==2021),aes(x=Grazing_Treatme
   expand_limits(y=1.2)+
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
   theme(text = element_text(size = 55),legend.text=element_text(size=45))+
-  geom_text(x=0.6, y=1.2, label="h)",size=20)
+  geom_text(x=0.6, y=1.2, label="e)",size=20)
 
 Order_Count_2022<-ggplot(subset(Relative_Count,Year==2022),aes(x=Grazing_Treatment,y=Average_RelativeCount,fill=Correct_Order, position = "stack"))+
   geom_bar(stat="identity")+
@@ -850,28 +1122,25 @@ Order_Count_2022<-ggplot(subset(Relative_Count,Year==2022),aes(x=Grazing_Treatme
   scale_x_discrete(labels = function(x) str_wrap(x, width = 8))+
   scale_fill_manual(values=c("#845749","#FBECC5","#D3DEDF", "#789193","#BABEBF","#66676C","#403025","#B89984","#CABEB9","#72544D"), labels=c("Araneae","Coleoptera","Diptera","Hemiptera","Hymenoptera","Lepidoptera","Neuroptera","Orthoptera","Thysanoptera","Trombiculidae"), name = "Order")+
   #scale_fill_manual(values=c("grey30","grey10"), labels=c("Orthoptera Count","Plot Count"))+
-  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),legend.position = "none")+
+  theme(axis.title.y=element_blank(),axis.text.y=element_blank(),legend.position = "right")+
   #Make the y-axis extend to 50
   expand_limits(y=1.2)+
   scale_y_continuous(labels = label_number(accuracy = 0.25))+
-  theme(text = element_text(size = 55),legend.text=element_text(size=45))+
-  geom_text(x=0.6, y=1.2, label="i)",size=20)
+  theme(text = element_text(size = 55),legend.text=element_text(size=45),legend.key.size = unit(2, "cm"))+
+  geom_text(x=0.6, y=1.2, label="f)",size=20)
 
-###### Create Figure 2 ####
-Dvac_2020_Plot+
-  Dvac_2021_Plot+
-  Dvac_2022_Plot+
+###### Create Figure 3 ####
   Order_Weight_2020 +  
   Order_Weight_2021+
   Order_Weight_2022 +
   Order_Count_2020 +  
   Order_Count_2021+
   Order_Count_2022 +
-  plot_layout(ncol = 3,nrow = 3)
-#save at 3000 x 3000
+  plot_layout(ncol = 3,nrow = 2)
+#save at 3000 x 2500
 
 
-#### Figure 3: RDA ####
+#### Figure 4: RDA ####
 
 ###### Create Dataframes for RDA ####
 
@@ -1067,3 +1336,4 @@ Feeding_Guild_2020+
   Feeding_Guild_2022+
   plot_layout(ncol = 3,nrow = 1)
 #Save at 3000x2000
+
